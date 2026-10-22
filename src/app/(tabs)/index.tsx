@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   FlatList,
@@ -22,17 +23,17 @@ export default function DailyActivityTracker() {
   const addActivity = () => {
     const text = activityText.trim();
 
-    if (text === "") {
-      return;
-    }
+    if (!text) return;
 
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      title: text,
-      completed: false,
-    };
+    setActivities((current) => [
+      ...current,
+      {
+        id: Date.now().toString(),
+        title: text,
+        completed: false,
+      },
+    ]);
 
-    setActivities((current) => [...current, newActivity]);
     setActivityText("");
   };
 
@@ -73,6 +74,7 @@ export default function DailyActivityTracker() {
         <Text style={styles.summaryNumber}>
           {completedCount} dari {activities.length} selesai
         </Text>
+
         <View style={styles.progressBackground}>
           <View
             style={[
@@ -87,6 +89,30 @@ export default function DailyActivityTracker() {
           />
         </View>
       </View>
+
+      <Text style={styles.sectionTitle}>Praktikum Navigasi</Text>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.navigationButton,
+          pressed && styles.pressed,
+        ]}
+        onPress={() => router.push("/praktikum-stack")}
+      >
+        <Text style={styles.navigationButtonText}>Buka Praktikum Stack →</Text>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.navigationButton,
+          pressed && styles.pressed,
+        ]}
+        onPress={() => router.push("/praktikum-tabs/" as any)}
+      >
+        <Text style={styles.navigationButtonText}>
+          Buka Tugas Mandiri Tab Navigation →
+        </Text>
+      </Pressable>
 
       <Text style={styles.sectionTitle}>Tambah Aktivitas</Text>
 
@@ -104,8 +130,6 @@ export default function DailyActivityTracker() {
         <Pressable
           style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
           onPress={addActivity}
-          accessibilityRole="button"
-          accessibilityLabel="Tambah aktivitas"
         >
           <Text style={styles.addButtonText}>+</Text>
         </Pressable>
@@ -158,8 +182,6 @@ export default function DailyActivityTracker() {
             <Pressable
               style={styles.deleteButton}
               onPress={() => deleteActivity(item.id)}
-              accessibilityRole="button"
-              accessibilityLabel={`Hapus ${item.title}`}
             >
               <Text style={styles.deleteText}>Hapus</Text>
             </Pressable>
@@ -204,7 +226,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 18,
-    marginBottom: 24,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: "#E8ECF4",
   },
@@ -235,6 +257,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#202945",
     marginBottom: 12,
+  },
+  navigationButton: {
+    backgroundColor: "#5265D4",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 22,
+  },
+  navigationButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
   inputRow: {
     flexDirection: "row",
