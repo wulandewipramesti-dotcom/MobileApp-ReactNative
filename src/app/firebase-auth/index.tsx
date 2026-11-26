@@ -1,9 +1,9 @@
-
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from "firebase/auth";
 import { useState } from "react";
 import {
@@ -18,7 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { FIREBASE_AUTH } from "../../../FirebaseConfig";
+import { FIREBASE_AUTH, GOOGLE_PROVIDER } from "../../../FirebaseConfig";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -27,14 +27,21 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Login dan Register Email/Password
   const handleAuth = async () => {
     if (!email.trim() || !password) {
-      Alert.alert("Incomplete Information", "Please enter your email and password.");
+      Alert.alert(
+        "Incomplete Information",
+        "Please enter your email and password.",
+      );
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Invalid Password", "Password must contain at least 6 characters.");
+      Alert.alert(
+        "Invalid Password",
+        "Password must contain at least 6 characters.",
+      );
       return;
     }
 
@@ -45,17 +52,12 @@ export default function LoginScreen() {
         await createUserWithEmailAndPassword(
           FIREBASE_AUTH,
           email.trim(),
-          password
+          password,
         );
       } else {
-        await signInWithEmailAndPassword(
-          FIREBASE_AUTH,
-          email.trim(),
-          password
-        );
+        await signInWithEmailAndPassword(FIREBASE_AUTH, email.trim(), password);
       }
 
-      // Firebase onAuthStateChanged will redirect the user to Home.
       router.replace("/firebase-auth/home" as any);
     } catch (error: any) {
       let message = "Something went wrong. Please try again.";
@@ -76,6 +78,42 @@ export default function LoginScreen() {
     }
   };
 
+  // Login menggunakan Google
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+
+    try {
+      const result = await signInWithPopup(FIREBASE_AUTH, GOOGLE_PROVIDER);
+
+      console.log("Google Sign-In berhasil:", result.user.email);
+
+      router.replace("/firebase-auth/home" as any);
+    } catch (error: any) {
+      console.log("Google Sign-In Error:", error.code, error.message);
+
+      let message = "Google Sign-In gagal. Silakan coba lagi.";
+
+      if (error.code === "auth/popup-closed-by-user") {
+        message = "Jendela Google ditutup sebelum login selesai.";
+      } else if (error.code === "auth/popup-blocked") {
+        message = "Popup diblokir browser. Izinkan popup untuk localhost.";
+      } else if (error.code === "auth/cancelled-popup-request") {
+        message = "Proses login dibatalkan.";
+      } else if (error.code === "auth/unauthorized-domain") {
+        message = "Domain aplikasi belum diizinkan di Firebase.";
+      } else if (
+        error.code === "auth/account-exists-with-different-credential"
+      ) {
+        message = "Email sudah terdaftar menggunakan metode login lain.";
+      }
+
+      Alert.alert("Google Sign-In", message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Berpindah antara Login dan Register
   const switchMode = () => {
     setIsRegister(!isRegister);
     setPassword("");
@@ -92,6 +130,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
             <Ionicons name="shield-checkmark" size={34} color="#FFFFFF" />
@@ -106,11 +145,13 @@ export default function LoginScreen() {
           </View>
         </View>
 
+        {/* Login/Register Card */}
         <View style={styles.card}>
           <View style={styles.cardHeading}>
             <Text style={styles.title}>
               {isRegister ? "Create Account" : "Welcome Back!"}
             </Text>
+
             <Text style={styles.description}>
               {isRegister
                 ? "Create your account and get started with MobileApp."
@@ -118,9 +159,12 @@ export default function LoginScreen() {
             </Text>
           </View>
 
+          {/* Email */}
           <Text style={styles.label}>Email Address</Text>
+
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#64748B" />
+
             <TextInput
               style={styles.input}
               placeholder="name@example.com"
@@ -133,9 +177,12 @@ export default function LoginScreen() {
             />
           </View>
 
+          {/* Password */}
           <Text style={styles.label}>Password</Text>
+
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#64748B" />
+
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
@@ -144,9 +191,12 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
             />
+
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
-              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
             >
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -156,6 +206,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Email/Password Button */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleAuth}
@@ -169,24 +220,48 @@ export default function LoginScreen() {
                 <Text style={styles.buttonText}>
                   {isRegister ? "Create Account" : "Sign In"}
                 </Text>
+
                 <Ionicons name="arrow-forward" size={19} color="#FFFFFF" />
               </>
             )}
           </TouchableOpacity>
 
+          {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.divider} />
           </View>
 
+          {/* Google Sign-In Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, loading && styles.buttonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color="#2563EB" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={21} color="#4285F4" />
+
+                <Text style={styles.googleButtonText}>
+                  Continue with Google
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Switch Login/Register */}
           <View style={styles.switchContainer}>
             <Text style={styles.switchText}>
               {isRegister
                 ? "Already have an account?"
                 : "Don't have an account?"}
             </Text>
-            <TouchableOpacity onPress={switchMode}>
+
+            <TouchableOpacity onPress={switchMode} disabled={loading}>
               <Text style={styles.switchLink}>
                 {isRegister ? " Sign In" : " Sign Up"}
               </Text>
@@ -194,8 +269,10 @@ export default function LoginScreen() {
           </View>
         </View>
 
+        {/* Footer */}
         <View style={styles.footer}>
           <Ionicons name="shield-checkmark-outline" size={15} color="#64748B" />
+
           <Text style={styles.footerText}>
             Your account is protected by Firebase Authentication.
           </Text>
@@ -205,6 +282,7 @@ export default function LoginScreen() {
   );
 }
 
+// Styling
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -343,6 +421,23 @@ const styles = StyleSheet.create({
   dividerText: {
     color: "#94A3B8",
     fontSize: 11,
+    fontWeight: "700",
+  },
+  googleButton: {
+    height: 54,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#DCE4F0",
+    borderRadius: 13,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 18,
+  },
+  googleButtonText: {
+    color: "#334155",
+    fontSize: 14,
     fontWeight: "700",
   },
   switchContainer: {
