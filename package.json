@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.26",
+    "@expo/vector-icons": "^15.0.2",
     "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@react-navigation/drawer": "^7.14.4",
     "@react-navigation/native": "^7.5.1",
@@ -21,6 +22,7 @@
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
     "expo-web-browser": "~57.0.3",
+    "firebase": "^13.4.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
